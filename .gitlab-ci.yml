@@ -1,0 +1,23 @@
+stages:
+  - build
+
+build:
+  stage: build
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
+  image: gitlab/dind
+  script:
+    - docker login -u $FTS_DOCKER_USER -p $FTS_DOCKER_PASSWORD
+    - docker build -t freetechsolutions/omlkam:$CI_COMMIT_SHORT_SHA .
+    - docker build -t freetechsolutions/omlkam:latest .
+    - docker push freetechsolutions/omlkam:$CI_COMMIT_SHORT_SHA
+    - docker push freetechsolutions/omlkam:latest
+  only:
+    - web

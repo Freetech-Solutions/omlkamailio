@@ -8,9 +8,9 @@ Base Image: kamailio/kamailio-ci:5.3
 ## Build
 
 ```
-  docker build -t freetechsolutions/omlkam:5.3 .
+  docker build -t freetechsolutions/omlkam:$TAG .
 ```
 
 ## Run container
 
-You need enviroment variables related to the asterisk and rtpengine you want
+You need enviroment variables related to the asterisk and rtpengine you want so to run this container us the Devenv environment
