@@ -13,4 +13,17 @@ Base Image: kamailio/kamailio-ci:5.3
 
 ## Run container
 
-You need environment variables related to the asterisk and rtpengine you want so to run this container use the Devenv environment
+```
+  docker run -it freetechsolutions/omlkam:latest bash
+```
+
+If you need to add environment variables and link folders to container, check docker run documentation: https://docs.docker.com/engine/reference/commandline/run/
+
+**Environment variables needed:**
+```
+  KAMAILIO_HOSTNAME //hostname of kamailio container
+  ASTERISK_HOSTNAME //hostname of asterisk container
+  REDIS_HOSTNAME // hostname of redis service
+  RTPENGINE_HOSTNAME //hostname of rtpengine service
+  AUTHEPH_SK //secret key for authephemeral SIP credentials
+```
