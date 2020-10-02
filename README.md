@@ -13,8 +13,4 @@ Base Image: kamailio/kamailio-ci:5.3
 
 ## Run container
 
-You need enviroment variables related to the asterisk and rtpengine you want so to run this container us the Devenv environment
-
-## Tags of images
-
-* 5.3-4fcafb19: initial image for oml 2.0 
+You need environment variables related to the asterisk and rtpengine you want so to run this container use the Devenv environment
