@@ -14,10 +14,6 @@ build:
     DOCKER_TLS_CERTDIR: ""
   image: gitlab/dind
   script:
-    - docker login -u $FTS_DOCKER_USER -p $FTS_DOCKER_PASSWORD
-    - docker build -t freetechsolutions/omlkam:5.3-$CI_COMMIT_SHORT_SHA .
-    - docker build -t freetechsolutions/omlkam:latest .
-    - docker push freetechsolutions/omlkam:5.3-$CI_COMMIT_SHORT_SHA
-    - docker push freetechsolutions/omlkam:latest
+    - bash build_images.sh
   only:
     - web
