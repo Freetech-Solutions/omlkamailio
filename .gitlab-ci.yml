@@ -17,3 +17,14 @@ build:
     - bash build_images.sh
   only:
     - web
+    - /.*release.*$/
+
+build-rpm:
+  stage: build
+  variables:
+  image: freetechsolutions/fpm-ansible:centos7
+  script:
+    - bash build_rpm.sh
+  only:
+    - web
+    - /.*release.*$/
