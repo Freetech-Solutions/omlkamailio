@@ -2,27 +2,10 @@
   hosts: prodenv-aio
   vars:
     install_prefix: /opt/omnileads
+    packages_url: https://fts-public-packages.s3.amazonaws.com
+    kamailio_package: "{{ packages_url }}/kamailio/kamailio-{{ kamailio_version }}.x86_64.rpm"
+    kamailio_location: "{{ install_prefix }}/kamailio"
   tasks:
-
-    # Se cargan las variavles para el playbook
-    - name: Loading variables por playbook
-      include_vars: vars.yml
-      when: kamailio_out is defined
-
-    # se crea el grupo de usuario omnileads
-    - name: Creation of {{ usuario }} group
-      group: name={{ usuario }} state=present
-      when: kamailio_out is defined
-
-    # Se crea el usuario omnileads con home en /opt/omnileads y con llaves ssh generadas
-    - name: Creation of {{ usuario }} user
-      user: name={{ usuario }} group={{ usuario }} create_home=yes shell=/bin/bash home=/opt/{{ usuario }} generate_ssh_key=yes ssh_key_bits=2048 state=present
-      when: kamailio_out is defined
-
-    # Se instala repo epel
-    - name: Install epel repository
-      command: yum install epel-release -y
-      when: kamailio_out is defined
 
     - name: Set of environments variables
       copy:
@@ -71,22 +54,3 @@
       register: s3_download
       until: s3_download is success
       when: kamailio_installed.stdout != kamailio_version
-
-    # Se pasan los certificados creados en kamailio a la carpeta kamailio_certs
-    - name: Copy of the certificates in kamailio
-      copy: "src={{ repo_location }}/ansible/deploy/certs/{{ item }} dest={{ certs_location }}"
-      with_items:
-        - cert.pem
-        - key.pem
-      
-    # Linkeamos dos binarios de kamailio que son necesarios para el buen funcionamiento del proceso de autenticacion
-    - name: Link kamcmd binarie to /usr/sbin
-      file: state=link src={{ kamailio_location }}/sbin/kamcmd dest=/usr/sbin/kamcmd mode=755 force=true
-
-    - name: Link kamctl binarie to /usr/sbin
-      file: state=link src={{ kamailio_location }}/sbin/kamctl dest=/usr/sbin/kamctl mode=755 force=true
-
-    # Starteo y habilito kamailio
-    - name: Restart of kamailio
-      service: name=kamailio state=restarted enabled=yes daemon_reload=yes
-      tags: postinstall

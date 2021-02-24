@@ -1,7 +1,0 @@
----
-install_prefix: /opt/omnileads
-packages_url: https://fts-public-packages.s3.amazonaws.com
-kamailio_package: "{{ packages_url }}/kamailio/kamailio-{{ kamailio_version }}.x86_64.rpm"
-kamailio_location: "{{ install_prefix }}/kamailio"
-certs_location: "{{ kamailio_location }}/etc/certs"
-usuario: omnileads

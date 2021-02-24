@@ -40,6 +40,9 @@ mkdir -p /opt/omnileads/kamailio/run/kamailio /opt/omnileads/kamailio/etc/certs
 mkdir -p /var/log/kamailio
 touch /var/log/kamailio/kamailio.log
 
+echo "Adding kamailio certificates"
+cp -a /builds/omnileads/omlkamailio/certs/* /opt/omnileads/kamailio/etc/certs
+
 echo "Adding kamailio.cfg omnileads"
 cp -a /builds/omnileads/omlkamailio/conf/kamailio.cfg /opt/omnileads/kamailio/etc/kamailio/kamailio.cfg
 
@@ -48,6 +51,9 @@ cd /root/
 fpm -s dir -d hiredis -d hiredis-devel -t rpm -n kamailio -v ${PACKAGE_VERSION} \
   --rpm-user omnileads \
   --rpm-group omnileads \
+  --before-install /builds/omnileads/omlkamailio/scripts/before_install.sh \
+  --after-install /builds/omnileads/omlkamailio/scripts/after_install.sh \
+  --after-remove /builds/omnileads/omlkamailio/scripts/after_remove.sh \
   -f /opt/omnileads/kamailio \
   /builds/omnileads/omlkamailio/kamailio.service=/etc/systemd/system/kamailio.service
 

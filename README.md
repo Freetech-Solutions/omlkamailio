@@ -4,8 +4,8 @@ This repository has the code of Kamailio component, configuration used for OMniL
 
 ## Docker image
 
-Kamailio Version: 5.3
-Base Image: kamailio/kamailio-ci:5.3
+* **Kamailio Version:** 5.3
+* **Base Image:** kamailio/kamailio-ci:5.3
 
 ### Build
 
@@ -13,7 +13,6 @@ Base Image: kamailio/kamailio-ci:5.3
   docker build -t freetechsolutions/omlkam:$TAG .
 ```
 Where $TAG is the docker tag you want for image.
-
 
 ### Run container
 
@@ -82,7 +81,7 @@ To deploy Kamailio in a dedicated host two main steps are needed:
 ```
 * Install ansible in the dedicated host.
 ```
-  yum install python3-pip python3 -y
+  yum install python3-pip python3 epel-release -y
   pip3 install pip --upgrade
   pip3 install 'ansible==2.9.2'
 ```
@@ -112,10 +111,10 @@ In this example we have asterisk, redis and rtpengine installed in a host with I
 ```
   ansible-playbook kamailio.yml -i inventory --extra-vars "repo_location=$(pwd)/.. kamailio_version=$(cat ../.package_version)"
 ```
-
 ---
 **NOTE**
 
-If kamailio can't access redis and rtpengine services, kamailio service will not start.
-If kamailio can't access asterisk calls in OMniLeads will not be correctly made.
+* If kamailio can't access redis and rtpengine services, kamailio service will not start.
+* If kamailio can't access asterisk calls in OMniLeads will not be correctly made.
+* If you change any network parameter in servers, you must edit again the parameters in inventory file and re-run ansible to write the files and restart the service.
 ---
