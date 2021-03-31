@@ -10,7 +10,8 @@ This repository has the code of Kamailio component, configuration used for OMniL
 ### Build
 
 ```
-  docker build -t freetechsolutions/omlkam:$TAG .
+  cd build/docker 
+  docker build -f Dockerfile -t freetechsolutions/omlkam:$TAG ../..
 ```
 Where $TAG is the docker tag you want for image.
 
@@ -31,6 +32,7 @@ If you need to add environment variables and link folders to container, check do
   AUTHEPH_SK //secret key for authephemeral SIP credentials
   SHM_SIZE // maximum memory ammount will consume kamailio
   PKG_SIZE // minimum memory ammount will consume kamailio
+  KAMAILIO_CERTS_LOCATION // location of kamailio certs
 ```
 
 ## RPM
@@ -43,8 +45,10 @@ If you need to add environment variables and link folders to container, check do
 Test the RPM build with these steps:
 
 1. Check variables for container builder in `scripts/.env_buildercontainer` file.
-2. Run scripts/builder_container.sh script
-3. Execute build_rpm.sh script
+2. Cd into build/rpm
+3. Run builder_container.sh script
+4. Inside the container, cd again into build/rpm
+5. Execute build_rpm.sh script
 
 ### Deploy
 
@@ -85,9 +89,9 @@ To deploy Kamailio in a dedicated host two main steps are needed:
   pip3 install pip --upgrade
   pip3 install 'ansible==2.9.2'
 ```
-* Go to `ansible` directory
+* Go to `deploy` directory
 ```
-  cd omlkamailio/ansible
+  cd omlkamailio/deploy
 ```
 * Open the file ansible/inventory and set there the parameters.
 ```

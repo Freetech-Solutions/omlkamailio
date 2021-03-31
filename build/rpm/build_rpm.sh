@@ -1,7 +1,8 @@
 #!/bin/bash
 
-KAMAILIO_VERSION=$(cat .kamailio_version)
-PACKAGE_VERSION=$(cat .package_version)
+KAMAILIO_VERSION=$(cat ../../.kamailio_version)
+PACKAGE_VERSION=$(cat ../../.package_version)
+KAMAILIO_LOCATION="/opt/omnileads/kamailio"
 
 if test -z ${KAMAILIO_VERSION}; then
   echo "${PROGNAME}: KAMAILIO_VERSION required" >&2
@@ -19,7 +20,7 @@ curl -vsL https://github.com/kamailio/kamailio/archive/${KAMAILIO_VERSION}.tar.g
 
 echo "Executing make"
 # Make of modules list files
-make PREFIX=/opt/omnileads/kamailio cfg
+make PREFIX=${KAMAILIO_LOCATION} cfg
 
 # Add desired modules
 MODULES="presence presence_xml app_python auth_ephemeral db_redis outbound tls uuid websocket"
@@ -36,26 +37,26 @@ make install
 rm -rf /usr/src/kamailio
 
 echo "Creating additional folders"
-mkdir -p /opt/omnileads/kamailio/run/kamailio /opt/omnileads/kamailio/etc/certs
+mkdir -p ${KAMAILIO_LOCATION}/run/kamailio ${KAMAILIO_LOCATION}/etc/certs
 mkdir -p /var/log/kamailio
 touch /var/log/kamailio/kamailio.log
-
+cd /builds/omnileads/omlkamailio
 echo "Adding kamailio certificates"
-cp -a /builds/omnileads/omlkamailio/certs/* /opt/omnileads/kamailio/etc/certs
+cp -a source/certs/* ${KAMAILIO_LOCATION}/etc/certs
 
 echo "Adding kamailio.cfg omnileads"
-cp -a /builds/omnileads/omlkamailio/conf/kamailio.cfg /opt/omnileads/kamailio/etc/kamailio/kamailio.cfg
+cp -a source/conf/kamailio.cfg ${KAMAILIO_LOCATION}/etc/kamailio/kamailio.cfg
 
 echo "Packing the rpm"
-cd /root/
 fpm -s dir -d hiredis -d hiredis-devel -t rpm -n kamailio -v ${PACKAGE_VERSION} \
   --rpm-user omnileads \
   --rpm-group omnileads \
-  --before-install /builds/omnileads/omlkamailio/scripts/before_install.sh \
-  --after-install /builds/omnileads/omlkamailio/scripts/after_install.sh \
-  --after-remove /builds/omnileads/omlkamailio/scripts/after_remove.sh \
-  -f /opt/omnileads/kamailio \
-  /builds/omnileads/omlkamailio/kamailio.service=/etc/systemd/system/kamailio.service
+  --before-install build/rpm/scripts/before_install.sh \
+  --after-install build/rpm/scripts/after_install.sh \
+  --after-remove build/rpm/scripts/after_remove.sh \
+  -f ${KAMAILIO_LOCATION} \
+  build/rpm/kamailio.service=/etc/systemd/system/kamailio.service
+mv kamailio-${PACKAGE_VERSION}* /root
 
 echo "Uploading RPM to AWS repository"
-aws s3 cp kamailio* s3://${AWS_BUCKET}/kamailio/kamailio-${PACKAGE_VERSION}.x86_64.rpm
+aws s3 cp /root/kamailio* s3://${AWS_BUCKET}/kamailio/kamailio-${PACKAGE_VERSION}.x86_64.rpm
