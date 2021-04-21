@@ -48,10 +48,8 @@
 
     # Se instala el paquete de websockets
     - name: Install kamailio OMniLeads {{ kamailio_version }} package (from s3 source)
-      yum: name={{ kamailio_package }} state=latest update_cache=yes
-      tags: postinstall
-      retries: 3
-      delay: 3
+      command: yum install -y {{ kamailio_package }}
       register: s3_download
-      until: s3_download is success
       when: kamailio_installed.stdout != kamailio_version
+      failed_when:
+        - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
