@@ -53,3 +53,4 @@
       when: kamailio_installed.stdout != kamailio_version
       failed_when:
         - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
+      tags: postinstall
