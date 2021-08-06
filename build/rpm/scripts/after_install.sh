@@ -11,6 +11,5 @@ if [ ! -f /usr/sbin/kamctl ]; then
   ln -s $KAMAILIO_LOCATION/sbin/kamctl /usr/sbin/kamctl
 fi
 chown -R omnileads. /opt/omnileads/kamailio
-echo "Restarting and enabling kamailio"
+echo "Enabling kamailio"
 systemctl enable kamailio
-systemctl restart kamailio
