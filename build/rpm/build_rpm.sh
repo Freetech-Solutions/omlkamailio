@@ -41,8 +41,6 @@ mkdir -p ${KAMAILIO_LOCATION}/run/kamailio ${KAMAILIO_LOCATION}/etc/certs
 mkdir -p /var/log/kamailio
 touch /var/log/kamailio/kamailio.log
 cd /builds/omnileads/omlkamailio
-echo "Adding kamailio certificates"
-cp -a source/certs/* ${KAMAILIO_LOCATION}/etc/certs
 
 echo "Adding kamailio.cfg omnileads"
 cp -a source/conf/kamailio.cfg ${KAMAILIO_LOCATION}/etc/kamailio/kamailio.cfg

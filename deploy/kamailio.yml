@@ -5,10 +5,11 @@
     packages_url: https://fts-public-packages.s3.amazonaws.com
     kamailio_package: "{{ packages_url }}/kamailio/kamailio-{{ kamailio_version }}.x86_64.rpm"
     kamailio_location: "{{ install_prefix }}/kamailio"
-    certs_location: /opt/omnileads/kamailio/etc/certs
+    certs_location: "{{ kamailio_location }}/etc/certs"
   tasks:
 
-    - name: Set of environments variables
+    # Environment variables setting
+    - name: Setting of environment variables
       copy:
         dest: "/etc/profile.d/omnileads_envars.sh"
         content: |
@@ -23,34 +24,46 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
-    # Chequeo si la version de kamailio instalada es {{ kamailio_version }}
-    - name: Check if kamailio OMniLeads package {{ kamailio_version }} is installed
-      shell:  yum list installed |grep kamailio | awk -F " " '{print $2}' |awk -F "-" '{print $1}'
+    # Check if Kamailio package {{ kamailio_version }} is installed
+    - name: Check if Kamailio package {{ kamailio_version }} is installed
+      shell: yum list installed | grep kamailio | awk '{print $2}' | awk -F "-" '{print $1}'
       register: kamailio_installed
       changed_when: false
       tags: postinstall
 
-    # Se imprime que el kamailio OMniLeads configuration no esta instalado si la version actual es inferior a la requerida
-    - debug: msg="kamailio OMniLeads {{ kamailio_version }} is not installed, proceeding to install"
+    # Print message if Kamailio package {{ kamailio_version }} is not installed yet
+    - debug: msg="Kamailio package {{ kamailio_version }} is not installed. Proceeding with installation."
       when: kamailio_installed.stdout != kamailio_version
       tags: postinstall
 
-    # Por lo contrario se imprime que ya está instalada la version mas actual
-    - debug: msg="kamailio OMniLeads package is already installed in version {{ kamailio_version }}, skipping installation steps"
+    # Print message if Kamailio package {{ kamailio_version }} is already installed
+    - debug: msg="Kamailio package is already installed in version {{ kamailio_version }}. Skipping installation steps."
       when: kamailio_installed.stdout == kamailio_version
       tags: postinstall
 
-    # Esta tarea es para eliminar paquete viejo de virtualenv generar inconsistencia de binarios
-    - name: Delete old kamailio OMniLeads package
-      yum: name=omnileads-kamailio state=absent
+    # Delete previous Kamailio package, before installing the latest one
+    - name: Delete previous Kamailio package, before installing the latest one
+      yum: name=kamailio state=absent
       tags: postinstall
       when: kamailio_installed.stdout != kamailio_version
 
-    # Se instala el paquete de websockets
-    - name: Install kamailio OMniLeads {{ kamailio_version }} package (from s3 source)
+    # Install Kamailio package {{ kamailio_version }}
+    - name: Install Kamailio package {{ kamailio_version }} (from s3 source)
       command: yum install -y {{ kamailio_package }}
       register: s3_download
       when: kamailio_installed.stdout != kamailio_version
       failed_when:
         - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
       tags: postinstall
+
+    # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
+    - name: Copy trusted key/cert pair in Kamailio location
+      copy: src=certs/{{ item.src }} dest={{ item.dest }}
+      with_items:
+      - { src: "cert.pem", dest: "{{ certs_location }}/cert.pem" }
+      - { src: "key.pem", dest: "{{ certs_location }}/key.pem" }
+
+    # Kamailio restart
+    - name: Restart kamailio service
+      systemd: name=kamailio state=restarted enabled=yes daemon_reload=yes
+      tags: always
