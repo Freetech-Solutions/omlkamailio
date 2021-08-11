@@ -2,16 +2,16 @@
 
 ########################## README ############ README ############# README #########################
 ########################## README ############ README ############# README #########################
-# El script first_boot_installer tiene como finalidad desplegar el componente sobre una instancia 
+# El script first_boot_installer tiene como finalidad desplegar el componente sobre una instancia
 # de linux exclusiva. Las variables que utiliza son "variables de entorno" de la instancia que está
 # por lanzar el script como acto seguido al primer boot del sistema operativo.
-# Dichas variables podrán ser provisionadas por un archivo .env (ej: Vagrant) o bien utilizando este 
-# script como plantilla de terraform. 
+# Dichas variables podrán ser provisionadas por un archivo .env (ej: Vagrant) o bien utilizando este
+# script como plantilla de terraform.
 #
 # En el caso de necesitar ejecutar este script manualmente sobre el user_data de una instancia cloud
 # o bien sobre una instancia onpremise a través de una conexión ssh, entonces se deberá copiar
-# esta plantilla hacia un archivo ignorado por git: first_boot_installer.sh para luego sobre 
-# dicha copia descomentar las líneas que comienzan con la cadena "export" para posteriormente 
+# esta plantilla hacia un archivo ignorado por git: first_boot_installer.sh para luego sobre
+# dicha copia descomentar las líneas que comienzan con la cadena "export" para posteriormente
 # introducir el valor deseado a cada variable.
 ########################## README ############ README ############# README #########################
 ########################## README ############ README ############# README #########################
@@ -73,6 +73,7 @@ systemctl stop firewalld > /dev/null 2>&1
 
 echo "************************ yum install  *************************"
 echo "************************ yum install  *************************"
+yum update -y
 yum install -y python3 python3-pip epel-release git
 
 echo "************************ install ansible *************************"
