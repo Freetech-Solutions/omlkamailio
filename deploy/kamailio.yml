@@ -24,6 +24,15 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
+   # Se descarga e instala el repositorio epel-release
+    - name: Enable epel repositoriy (amazon linux)
+      command: amazon-linux-extras enable epel
+      when: kamailio_out is defined and ansible_distribution == "Amazon"
+      register: result
+      failed_when:
+        - result.rc != 0
+        - result.rc != 1
+
     # Check if Kamailio package {{ kamailio_version }} is installed
     - name: Check if Kamailio package {{ kamailio_version }} is installed
       shell: yum list installed | grep kamailio | awk '{print $2}' | awk -F "-" '{print $1}'
@@ -52,7 +61,8 @@
 
     # Delete previous Kamailio package, before installing the latest one
     - name: Delete previous Kamailio package, before installing the latest one
-      yum: name=kamailio state=absent
+      #yum: name=kamailio state=absent
+      command: yum remove -y kamailio
       tags: postinstall
       when: kamailio_installed.stdout != kamailio_version
 
