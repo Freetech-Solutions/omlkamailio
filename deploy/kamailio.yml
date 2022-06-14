@@ -24,8 +24,8 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
-   # Se descarga e instala el repositorio epel-release
-    - name: Enable epel repositoriy (amazon linux)
+   # Enable EPEL repositoriy on Amazon Linux
+    - name: Enable EPEL repositoriy Amazon Linux
       command: amazon-linux-extras enable epel
       when: kamailio_out is defined and ansible_distribution == "Amazon"
       register: result
@@ -50,15 +50,6 @@
       when: kamailio_installed.stdout == kamailio_version
       tags: postinstall
 
-    # Solution to issue OML-213: Backup of certs, for re-setting after installation
-    - name: Backup of certs, for re-setting after installation
-      when: kamailio_installed.stdout == "210420.01"
-      copy: src={{ item.src }} dest={{ item.dest }}
-      with_items:
-      - { src: "{{ certs_location }}/cert.pem", dest: "/tmp/kamailio-cert.pem" }
-      - { src: "{{ certs_location }}/key.pem", dest: "/tmp/kamailio-key.pem" }
-      tags: postinstall
-
     # Delete previous Kamailio package, before installing the latest one
     - name: Delete previous Kamailio package, before installing the latest one
       #yum: name=kamailio state=absent
@@ -73,15 +64,6 @@
       when: kamailio_installed.stdout != kamailio_version
       failed_when:
         - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
-      tags: postinstall
-
-    # Solution to issue OML-213: Re-setting backed up certs after installation
-    - name: Re-setting certs after installation
-      when: kamailio_installed.stdout == "210420.01"
-      copy: src={{ item.src }} dest={{ item.dest }}
-      with_items:
-      - { src: "/tmp/kamailio-cert.pem", dest: "{{ certs_location }}/cert.pem" }
-      - { src: "/tmp/kamailio-key.pem", dest: "{{ certs_location }}/key.pem" }
       tags: postinstall
 
     # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
