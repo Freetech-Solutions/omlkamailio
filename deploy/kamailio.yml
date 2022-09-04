@@ -24,12 +24,31 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
+      wget -O- http://deb.kamailio.org/kamailiodebkey.gpg | sudo apt-key add -
+
+    - name: Add specified repository into sources list
+      apt_repository:
+        repo: deb http://deb.kamailio.org/kamailio56-nightly jessie  main
+        state: present
+
+    - name: Apt update
+      command: apt update
+
     - name: Install Kamailio dependencies
       apt:
         name:
           - libhiredis-dev
           - uuid-dev
+          - net-tools
           - sngrep
+          - kamailio
+          - kamailio-app_python-module
+          - kamailio-auth_ephemeral-module
+          - kamailio-db_redis-module
+          - kamailio-outbound-module
+          - kamailio-tls-module
+          - kamailio-uuid-module
+          - kamailio-websocket-module
         state: present
 
 
@@ -67,14 +86,14 @@
     #   tags: postinstall
 
     # Se instala el paquete asterisk
-    - name: Download kamailio-{{ kamailio_version }} package (from s3 source)
-      get_url:
-        url: "{{ kamailio_package }}"
-        dest: /tmp/
-      register: s3_download
-
-    - name: Install kamailio package {{ kamailio_version }}
-      command: apt install /tmp/kamailio_{{ kamailio_version }}_amd64.deb
+    # - name: Download kamailio-{{ kamailio_version }} package (from s3 source)
+    #   get_url:
+    #     url: "{{ kamailio_package }}"
+    #     dest: /tmp/
+    #   register: s3_download
+    #
+    # - name: Install kamailio package {{ kamailio_version }}
+    #   command: apt install /tmp/kamailio_{{ kamailio_version }}_amd64.deb
 
     # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
     - name: Copy trusted key/cert pair in Kamailio location
@@ -84,6 +103,14 @@
       with_items:
       - { src: "cert.pem", dest: "{{ certs_location }}/cert.pem" }
       - { src: "key.pem", dest: "{{ certs_location }}/key.pem" }
+
+    - name: Copy trusted key/cert pair in Kamailio location
+      copy:
+        src: "../source/conf/{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+      - { src: "kamailio.cfg", dest: "/etc/kamailio" }
+      - { src: "tls.cfg", dest: "etc/kamailio" }
 
     # Kamailio restart
     - name: Restart kamailio service
