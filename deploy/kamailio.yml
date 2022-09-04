@@ -3,7 +3,7 @@
   vars:
     install_prefix: /opt/omnileads
     packages_url: https://fts-public-packages.s3.amazonaws.com
-    kamailio_package: "{{ packages_url }}/kamailio/kamailio-{{ kamailio_version }}.x86_64.rpm"
+    kamailio_package: "{{ packages_url }}/kamailio/kamailio_{{ kamailio_version }}_amd64.deb"
     kamailio_location: "{{ install_prefix }}/kamailio"
     certs_location: "{{ kamailio_location }}/etc/certs"
   tasks:
@@ -24,56 +24,77 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
-   # Enable EPEL repositoriy on Amazon Linux
-    - name: Enable EPEL repositoriy Amazon Linux
-      command: amazon-linux-extras enable epel
-      when: kamailio_out is defined and ansible_distribution == "Amazon"
-      register: result
-      failed_when:
-        - result.rc != 0
-        - result.rc != 1
 
-    # Check if Kamailio package {{ kamailio_version }} is installed
-    - name: Check if Kamailio package {{ kamailio_version }} is installed
-      shell: yum list installed | grep kamailio | awk '{print $2}' | awk -F "-" '{print $1}'
-      register: kamailio_installed
-      changed_when: false
-      tags: postinstall
+    # Se setea el timezone
+    - name: Set timezone of server
+      timezone: name={{ TZ }}
 
-    # Print message if Kamailio package {{ kamailio_version }} is not installed yet
-    - debug: msg="Kamailio package {{ kamailio_version }} is not installed. Proceeding with installation."
-      when: kamailio_installed.stdout != kamailio_version
-      tags: postinstall
+    - name: Asterisk dependencies
+      apt:
+        name:
+          - libhiredis-dev
+          - uuid-dev
+          - sngrep
+        state: present
 
-    # Print message if Kamailio package {{ kamailio_version }} is already installed
-    - debug: msg="Kamailio package is already installed in version {{ kamailio_version }}. Skipping installation steps."
-      when: kamailio_installed.stdout == kamailio_version
-      tags: postinstall
 
-    # Delete previous Kamailio package, before installing the latest one
-    - name: Delete previous Kamailio package, before installing the latest one
-      #yum: name=kamailio state=absent
-      command: yum remove -y kamailio
-      tags: postinstall
-      when: kamailio_installed.stdout != kamailio_version
+    # # Check if Kamailio package {{ kamailio_version }} is installed
+    # - name: Check if Kamailio package {{ kamailio_version }} is installed
+    #   shell: yum list installed | grep kamailio | awk '{print $2}' | awk -F "-" '{print $1}'
+    #   register: kamailio_installed
+    #   changed_when: false
+    #   tags: postinstall
+    #
+    # # Print message if Kamailio package {{ kamailio_version }} is not installed yet
+    # - debug: msg="Kamailio package {{ kamailio_version }} is not installed. Proceeding with installation."
+    #   when: kamailio_installed.stdout != kamailio_version
+    #   tags: postinstall
+    #
+    # # Print message if Kamailio package {{ kamailio_version }} is already installed
+    # - debug: msg="Kamailio package is already installed in version {{ kamailio_version }}. Skipping installation steps."
+    #   when: kamailio_installed.stdout == kamailio_version
+    #   tags: postinstall
+    #
+    # # Delete previous Kamailio package, before installing the latest one
+    # - name: Delete previous Kamailio package, before installing the latest one
+    #   #yum: name=kamailio state=absent
+    #   command: yum remove -y kamailio
+    #   tags: postinstall
+    #   when: kamailio_installed.stdout != kamailio_version
+    #
+    # # Install Kamailio package {{ kamailio_version }}
+    # - name: Install Kamailio package {{ kamailio_version }} (from s3 source)
+    #   command: yum install -y {{ kamailio_package }}
+    #   register: s3_download
+    #   when: kamailio_installed.stdout != kamailio_version
+    #   failed_when:
+    #     - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
+    #   tags: postinstall
 
-    # Install Kamailio package {{ kamailio_version }}
-    - name: Install Kamailio package {{ kamailio_version }} (from s3 source)
-      command: yum install -y {{ kamailio_package }}
+    # Se instala el paquete asterisk
+    - name: Download kamailio-{{ kamailio_version }} package (from s3 source)
+      get_url:
+        url: "{{ kamailio_package }}"
+        dest: /tmp/
       register: s3_download
-      when: kamailio_installed.stdout != kamailio_version
-      failed_when:
-        - "s3_download.rc != 0 or 'scriptlet failure' in s3_download.stderr"
-      tags: postinstall
+
+    - name: Install kamailio package {{ kamailio_version }}
+      command: apt install /tmp/asterisk_{{ kamailio_version }}_amd64.deb
 
     # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
     - name: Copy trusted key/cert pair in Kamailio location
-      copy: src=certs/{{ item.src }} dest={{ item.dest }}
+      copy:
+        src: certs/{{ item.src }}
+        dest: {{ item.dest }}
       with_items:
       - { src: "cert.pem", dest: "{{ certs_location }}/cert.pem" }
       - { src: "key.pem", dest: "{{ certs_location }}/key.pem" }
 
     # Kamailio restart
     - name: Restart kamailio service
-      systemd: name=kamailio state=restarted enabled=yes daemon_reload=yes
+      systemd:
+        name: kamailio
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
       tags: always

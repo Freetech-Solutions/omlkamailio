@@ -17,4 +17,4 @@ docker run -it --rm --name kamailio-fpm \
   --mount type=bind,source="$(pwd)"/../..,target=/builds/omnileads/omlkamailio \
   --env-file .env \
   --network=host --workdir=/builds/omnileads/omlkamailio \
-  freetechsolutions/fpm-ansible:latest bash
+  freetechsolutions/fpm-kamailio:220904.01 bash
