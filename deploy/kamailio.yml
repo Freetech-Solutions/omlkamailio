@@ -74,7 +74,7 @@
       register: s3_download
 
     - name: Install kamailio package {{ kamailio_version }}
-      command: apt install /tmp/asterisk_{{ kamailio_version }}_amd64.deb
+      command: apt install /tmp/kamailio_{{ kamailio_version }}_amd64.deb
 
     # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
     - name: Copy trusted key/cert pair in Kamailio location
