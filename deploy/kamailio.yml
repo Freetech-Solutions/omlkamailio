@@ -24,12 +24,7 @@
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
       when: kamailio_out is defined
 
-
-    # Se setea el timezone
-    - name: Set timezone of server
-      timezone: name={{ TZ }}
-
-    - name: Asterisk dependencies
+    - name: Install Kamailio dependencies
       apt:
         name:
           - libhiredis-dev
@@ -84,8 +79,8 @@
     # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
     - name: Copy trusted key/cert pair in Kamailio location
       copy:
-        src: certs/{{ item.src }}
-        dest: {{ item.dest }}
+        src: "certs/{{ item.src }}"
+        dest: "{{ item.dest }}"
       with_items:
       - { src: "cert.pem", dest: "{{ certs_location }}/cert.pem" }
       - { src: "key.pem", dest: "{{ certs_location }}/key.pem" }
