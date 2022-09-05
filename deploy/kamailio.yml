@@ -69,6 +69,7 @@
         dest: /etc/kamailio/certs/
         owner: kamailio
         group: kamailio
+        mode: 0777
 
     - name: Copy certs
       copy:
@@ -76,6 +77,7 @@
         dest: /etc/kamailio/certs/
         owner: kamailio
         group: kamailio
+        mode: 0777
 
     - name: Copy kamailio.cfg
       copy:
