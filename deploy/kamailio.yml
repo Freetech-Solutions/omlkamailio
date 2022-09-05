@@ -61,7 +61,7 @@
         state: directory
         owner: kamailio
         group: kamailio
-        mode: 0600
+        mode: 0777
 
     - name: Copy certs
       copy:
@@ -80,7 +80,7 @@
     - name: Copy kamailio.cfg
       copy:
         src: ../source/conf/kamailio.cfg
-        dest: /etc/kamailio/oml_kamailio.cfg
+        dest: /etc/kamailio/kamailio.cfg
 
     - name: Copy kamailio.service Systemd file
       copy:
