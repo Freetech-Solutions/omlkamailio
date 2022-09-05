@@ -5,7 +5,7 @@
     packages_url: https://fts-public-packages.s3.amazonaws.com
     kamailio_package: "{{ packages_url }}/kamailio/kamailio_{{ kamailio_version }}_amd64.deb"
     kamailio_location: "{{ install_prefix }}/kamailio"
-    certs_location: "/usr/src/omlkamailio/deploy/certs/"
+    certs_location: ""
     debian_version: "bullseye"
   tasks:
 
@@ -57,7 +57,7 @@
     - name: Copy kamailio.cfg
       copy:
         src: ../source/conf/kamailio.cfg
-        dest: /etc/kamailio
+        dest: /etc/kamailio/oml_kamailio.cfg
 
     - name: Copy kamailio.service Systemd file
       copy:
