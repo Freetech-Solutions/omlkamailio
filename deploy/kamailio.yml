@@ -61,7 +61,7 @@
 
     - name: Copy kamailio.service Systemd file
       copy:
-        src: deploy/templates/kamailio.service
+        src: templates/kamailio.service
         dest: /etc/systemd/system/multi-user.target.wants/kamailio.service
 
     # - name: Modify kamailio.service
