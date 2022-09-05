@@ -55,22 +55,12 @@
           - kamailio-websocket-modules
         state: present
 
-    # Copy trusted key/cert pair in Kamailio location, if these files don't exist already
-    - name: Copy trusted key/cert pair in Kamailio location
-      copy:
-        src: "certs/{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-      - { src: "cert.pem", dest: "{{ certs_location }}/cert.pem" }
-      - { src: "key.pem", dest: "{{ certs_location }}/key.pem" }
-
     - name: Copy trusted key/cert pair in Kamailio location
       copy:
         src: "../source/conf/{{ item.src }}"
         dest: "{{ item.dest }}"
       with_items:
       - { src: "kamailio.cfg", dest: "/etc/kamailio" }
-      - { src: "tls.cfg", dest: "etc/kamailio" }
 
     # Kamailio restart
     - name: Restart kamailio service
