@@ -89,24 +89,11 @@
         src: templates/kamailio.service
         dest: /etc/systemd/system/omnileads-kamailio.service
 
-    # - name: Modify kamailio.service
-    #   lineinfile:
-    #     dest: '/etc/systemd/system/multi-user.target.wants/kamailio.service'
-    #     regexp: '{{ item.regexp }}'
-    #     line: '{{ item.line }}'
-    #   loop:
-    #     - { regexp: "^#listen_addresses", line: "listen_addresses = '*'" }
-    #     - { regexp: "^#archive_mode", line: "archive_mode = 'on'" }
-    #     - { regexp: "^#archive_command", line: "archive_command = 'test ! -f /var/lib/pgsql/archivelog/%f && cp %p /var/lib/pgsql/archivelog/%f'" }
-    #     - { regexp: "^#hot_standby", line: "hot_standby = on" }
-    #     - { regexp: "^#shared_preload_libraries", line: "shared_preload_libraries = 'repmgr'"}
-    #   when: deploy_ha is defined
-
     - name: stop and disable a kamailio apt service
-       service:
-         name: kamailio
-         state: stopped
-         enabled: false
+      service:
+        name: kamailio
+        state: stopped
+        enabled: false
 
     # Kamailio restart
     - name: Restart kamailio service
