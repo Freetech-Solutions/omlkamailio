@@ -12,7 +12,7 @@
     # Environment variables setting
     - name: Setting of environment variables
       copy:
-        dest: "/etc/default/omnileads_envars.sh"
+        dest: "/etc/default/kamailio"
         content: |
           KAMAILIO_HOSTNAME={{ kamailio_hostname }}
           KAMAILIO_CERTS_LOCATION={{ certs_location }}
@@ -58,6 +58,11 @@
       copy:
         src: ../source/conf/kamailio.cfg
         dest: /etc/kamailio
+
+    - name: Copy kamailio.service Systemd file
+      copy:
+        src: deploy/templates/kamailio.service
+        dest: /etc/systemd/system/multi-user.target.wants/kamailio.service
 
     # - name: Modify kamailio.service
     #   lineinfile:
