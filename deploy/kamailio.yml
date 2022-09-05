@@ -6,6 +6,7 @@
     kamailio_package: "{{ packages_url }}/kamailio/kamailio_{{ kamailio_version }}_amd64.deb"
     kamailio_location: "{{ install_prefix }}/kamailio"
     certs_location: "{{ kamailio_location }}/etc/certs"
+    debian_version: "bullseye"
   tasks:
 
     # Environment variables setting
@@ -31,7 +32,7 @@
 
     - name: Add specified repository into sources list
       apt_repository:
-        repo: deb http://deb.kamailio.org/kamailio56 buster main
+        repo: deb http://deb.kamailio.org/kamailio56 bullseye main
         state: present
 
     - name: Apt update
