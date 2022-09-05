@@ -5,14 +5,14 @@
     packages_url: https://fts-public-packages.s3.amazonaws.com
     kamailio_package: "{{ packages_url }}/kamailio/kamailio_{{ kamailio_version }}_amd64.deb"
     kamailio_location: "{{ install_prefix }}/kamailio"
-    certs_location: "{{ kamailio_location }}/etc/certs"
+    certs_location: "/usr/src/omlkamailio/deploy/certs/"
     debian_version: "bullseye"
   tasks:
 
     # Environment variables setting
     - name: Setting of environment variables
       copy:
-        dest: "/etc/profile.d/omnileads_envars.sh"
+        dest: "/etc/default/omnileads_envars.sh"
         content: |
           KAMAILIO_HOSTNAME={{ kamailio_hostname }}
           KAMAILIO_CERTS_LOCATION={{ certs_location }}
@@ -23,7 +23,6 @@
           PKG_SIZE={{ pkg_size }}
 
           export KAMAILIO_HOSTNAME KAMAILIO_CERTS_LOCATION ASTERISK_HOSTNAME REDIS_HOSTNAME RTPENGINE_HOSTNAME SHM_SIZE PKG_SIZE
-      when: kamailio_out is defined
 
       # Add an Apt signing key, uses whichever key is at the URL
     - apt_key:
@@ -55,12 +54,23 @@
           - kamailio-websocket-modules
         state: present
 
-    - name: Copy trusted key/cert pair in Kamailio location
+    - name: Copy kamailio.cfg
       copy:
-        src: "../source/conf/{{ item.src }}"
-        dest: "{{ item.dest }}"
-      with_items:
-      - { src: "kamailio.cfg", dest: "/etc/kamailio" }
+        src: ../source/conf/kamailio.cfg
+        dest: /etc/kamailio
+
+    # - name: Modify kamailio.service
+    #   lineinfile:
+    #     dest: '/etc/systemd/system/multi-user.target.wants/kamailio.service'
+    #     regexp: '{{ item.regexp }}'
+    #     line: '{{ item.line }}'
+    #   loop:
+    #     - { regexp: "^#listen_addresses", line: "listen_addresses = '*'" }
+    #     - { regexp: "^#archive_mode", line: "archive_mode = 'on'" }
+    #     - { regexp: "^#archive_command", line: "archive_command = 'test ! -f /var/lib/pgsql/archivelog/%f && cp %p /var/lib/pgsql/archivelog/%f'" }
+    #     - { regexp: "^#hot_standby", line: "hot_standby = on" }
+    #     - { regexp: "^#shared_preload_libraries", line: "shared_preload_libraries = 'repmgr'"}
+    #   when: deploy_ha is defined
 
     # Kamailio restart
     - name: Restart kamailio service
