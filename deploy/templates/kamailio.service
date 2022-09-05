@@ -7,7 +7,7 @@ After=network-online.target
 Type=forking
 User=kamailio
 Group=kamailio
-Environment='CFGFILE=/etc/kamailio/oml_kamailio.cfg'
+Environment='CFGFILE=/etc/kamailio/kamailio.cfg'
 EnvironmentFile=-/etc/default/kamailio
 # PIDFile requires a full absolute path
 PIDFile=/run/kamailio/kamailio.pid
