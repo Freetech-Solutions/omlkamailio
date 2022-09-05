@@ -54,6 +54,21 @@
           - kamailio-websocket-modules
         state: present
 
+
+    - name: Create custom conf files folder
+      file:
+        path:  "/etc/kamailio/certs"
+        state: directory
+        mode: 0660
+
+    - name: Copy certs
+      copy:
+        src: "certs/{{ item }}"
+        dest: /etc/kamailio/certs/
+      loop:
+        - item: cert.pem
+        - item: key.pem
+
     - name: Copy kamailio.cfg
       copy:
         src: ../source/conf/kamailio.cfg
