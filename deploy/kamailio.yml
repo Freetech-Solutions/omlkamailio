@@ -5,7 +5,7 @@
     packages_url: https://fts-public-packages.s3.amazonaws.com
     kamailio_package: "{{ packages_url }}/kamailio/kamailio_{{ kamailio_version }}_amd64.deb"
     kamailio_location: "{{ install_prefix }}/kamailio"
-    certs_location: ""
+    certs_location: "/etc/kamailio/certs"
     debian_version: "bullseye"
   tasks:
 
@@ -59,15 +59,23 @@
       file:
         path:  "/etc/kamailio/certs"
         state: directory
-        mode: 0660
+        owner: kamailio
+        group: kamailio
+        mode: 0600
 
     - name: Copy certs
       copy:
-        src: "certs/{{ item }}"
+        src: certs/cert.pem
         dest: /etc/kamailio/certs/
-      loop:
-        - item: cert.pem
-        - item: key.pem
+        owner: kamailio
+        group: kamailio
+
+    - name: Copy certs
+      copy:
+        src: certs/key.pem
+        dest: /etc/kamailio/certs/
+        owner: kamailio
+        group: kamailio
 
     - name: Copy kamailio.cfg
       copy:
