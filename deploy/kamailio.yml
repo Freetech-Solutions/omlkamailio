@@ -14,11 +14,11 @@
       copy:
         dest: "/etc/default/kamailio"
         content: |
-          KAMAILIO_HOSTNAME={{ kamailio_hostname }}
+          KAMAILIO_HOSTNAME={{ kamailio_host }}
           KAMAILIO_CERTS_LOCATION={{ certs_location }}
-          ASTERISK_HOSTNAME={{ asterisk_hostname }}
-          REDIS_HOSTNAME={{ redis_hostname }}
-          RTPENGINE_HOSTNAME={{ rtpengine_hostname }}
+          ASTERISK_HOSTNAME={{ asterisk_host }}
+          REDIS_HOSTNAME={{ redis_host }}
+          RTPENGINE_HOSTNAME={{ rtpengine_host }}
           SHM_SIZE={{ shm_size }}
           PKG_SIZE={{ pkg_size }}
 
@@ -65,7 +65,7 @@
 
     - name: Copy certs
       copy:
-        src: certs/cert.pem
+        src: "{{ kamailio_location }}certs/cert.pem"
         dest: /etc/kamailio/certs/
         owner: kamailio
         group: kamailio
@@ -73,7 +73,7 @@
 
     - name: Copy certs
       copy:
-        src: certs/key.pem
+        src: "{{ kamailio_location }}certs/key.pem"
         dest: /etc/kamailio/certs/
         owner: kamailio
         group: kamailio
@@ -81,12 +81,12 @@
 
     - name: Copy kamailio.cfg
       copy:
-        src: ../source/conf/kamailio.cfg
+        src: "{{ kamailio_location }}../source/conf/kamailio.cfg"
         dest: /etc/kamailio/kamailio.cfg
 
     - name: Copy kamailio.service Systemd file
       copy:
-        src: templates/kamailio.service
+        src: "{{ kamailio_location }}templates/kamailio.service"
         dest: /etc/systemd/system/omnileads-kamailio.service
 
     - name: stop and disable a kamailio apt service

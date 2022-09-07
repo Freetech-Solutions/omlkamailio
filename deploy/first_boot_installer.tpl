@@ -40,6 +40,7 @@
 
 SRC=/usr/src
 COMPONENT_REPO=https://gitlab.com/omnileads/omlkamailio.git
+COMPONENT=omlkamailio
 
 echo "******************** IPV4 address config ***************************"
 echo "******************** IPV4 address config ***************************"
@@ -54,7 +55,7 @@ echo "************************ clone REPO *************************"
 echo "************************ clone REPO *************************"
 cd $SRC
 git clone $COMPONENT_REPO
-cd omlkamailio
+cd $COMPONENT
 git checkout ${oml_kamailio_release}
 cd deploy
 
