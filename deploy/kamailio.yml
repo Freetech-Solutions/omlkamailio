@@ -1,5 +1,8 @@
-- name: Kamailio installation and configuration
+- name: KAMAILIO Kamailio installation and configuration
   hosts: prodenv-aio
+  tags:
+    - telephone
+    - kamailio
   vars:
     install_prefix: /opt/omnileads
     packages_url: https://fts-public-packages.s3.amazonaws.com
@@ -10,7 +13,7 @@
   tasks:
 
     # Environment variables setting
-    - name: Setting of environment variables
+    - name: KAMAILIO Setting of environment variables
       copy:
         dest: "/etc/default/kamailio"
         content: |
@@ -29,15 +32,15 @@
         url: "http://deb.kamailio.org/kamailiodebkey.gpg"
         state: present
 
-    - name: Add specified repository into sources list
+    - name: KAMAILIO Add specified repository into sources list
       apt_repository:
         repo: deb http://deb.kamailio.org/kamailio56 bullseye main
         state: present
 
-    - name: Apt update
+    - name: KAMAILIO Apt update
       command: apt update
 
-    - name: Install Kamailio dependencies
+    - name: KAMAILIO Install Kamailio dependencies
       apt:
         name:
           - libhiredis-dev
@@ -55,7 +58,7 @@
         state: present
 
 
-    - name: Create custom conf files folder
+    - name: KAMAILIO Create custom conf files folder
       file:
         path:  "/etc/kamailio/certs"
         state: directory
@@ -63,7 +66,7 @@
         group: kamailio
         mode: 0777
 
-    - name: Copy certs
+    - name: KAMAILIO Copy certs
       copy:
         src: "{{ kamailio_location }}certs/cert.pem"
         dest: /etc/kamailio/certs/
@@ -71,7 +74,7 @@
         group: kamailio
         mode: 0777
 
-    - name: Copy certs
+    - name: KAMAILIO Copy certs
       copy:
         src: "{{ kamailio_location }}certs/key.pem"
         dest: /etc/kamailio/certs/
@@ -79,24 +82,24 @@
         group: kamailio
         mode: 0777
 
-    - name: Copy kamailio.cfg
+    - name: KAMAILIO Copy kamailio.cfg
       copy:
         src: "{{ kamailio_location }}../source/conf/kamailio.cfg"
         dest: /etc/kamailio/kamailio.cfg
 
-    - name: Copy kamailio.service Systemd file
+    - name: KAMAILIO Copy kamailio.service Systemd file
       copy:
         src: "{{ kamailio_location }}templates/kamailio.service"
         dest: /etc/systemd/system/omnileads-kamailio.service
 
-    - name: stop and disable a kamailio apt service
+    - name: KAMAILIO stop and disable a kamailio apt service
       service:
         name: kamailio
         state: stopped
         enabled: false
 
     # Kamailio restart
-    - name: Restart kamailio service
+    - name: KAMAILIO Restart kamailio service
       systemd:
         name: omnileads-kamailio
         state: restarted
