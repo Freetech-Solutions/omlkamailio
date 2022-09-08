@@ -1,7 +1,8 @@
 - name: KAMAILIO Kamailio installation and configuration
   hosts: prodenv-aio
   tags:
-    - telephone
+    - aio
+    - voice
     - kamailio
   vars:
     install_prefix: /opt/omnileads
