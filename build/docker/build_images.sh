@@ -11,5 +11,5 @@ elif [ $CI_COMMIT_REF_NAME == "develop" ]; then
   docker push freetechsolutions/omlkam:develop
 fi
 
-docker build -f Dockerfile -t freetechsolutions/omlacd:$PACKAGE_VERSION ../..
-docker push freetechsolutions/omlacd:$PACKAGE_VERSION
+docker build -f Dockerfile -t freetechsolutions/omlkam:$PACKAGE_VERSION ../..
+docker push freetechsolutions/omlkam:$PACKAGE_VERSION
