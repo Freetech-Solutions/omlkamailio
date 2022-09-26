@@ -13,8 +13,21 @@ printf "$GREEN** [OMniLeads] Pulling the latest image of fpm $NC\n"
 docker pull freetechsolutions/fpm-ansible:latest
 
 printf "$GREEN** [OMniLeads] Run and exec the container $NC\n"
-docker run -it --rm --name kamailio-fpm \
-  --mount type=bind,source="$(pwd)"/../..,target=/builds/omnileads/omlkamailio \
-  --env-file .env \
-  --network=host --workdir=/builds/omnileads/omlkamailio \
-  freetechsolutions/fpm-kamailio:220904.01 bash
+
+if [[ "$1"  == "deb" ]];then
+  docker run -it --rm --name kamailio-fpm \
+    --mount type=bind,source="$(pwd)"/../..,target=/builds/omnileads/omlkamailio \
+    --env-file .env \
+    --network=host --workdir=/builds/omnileads/omlkamailio \
+    freetechsolutions/fpm-kamailio:220904.01 bash
+elif [[ "$1"  == "rpm" ]]; then
+  docker run -it --rm --name kamailio-fpm \
+    --mount type=bind,source="$(pwd)"/../..,target=/builds/omnileads/omlkamailio \
+    --env-file .env \
+    --network=host --workdir=/builds/omnileads/omlkamailio \
+    freetechsolutions/fpm-ansible:latest bash
+else
+  echo "you must invoke with arg: rpm or deb"
+  echo  ""
+  exit 1
+fi

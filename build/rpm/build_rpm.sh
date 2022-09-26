@@ -52,8 +52,8 @@ fpm -s dir -d hiredis -d hiredis-devel -t rpm -n kamailio -v ${PACKAGE_VERSION} 
   --before-install build/rpm/scripts/before_install.sh \
   --after-install build/rpm/scripts/after_install.sh \
   --after-remove build/rpm/scripts/after_remove.sh \
-  -f ${KAMAILIO_LOCATION} \
-  build/rpm/kamailio.service=/etc/systemd/system/kamailio.service
+  -f ${KAMAILIO_LOCATION} 
+
 mv kamailio-${PACKAGE_VERSION}* /root
 
 echo "Uploading RPM to AWS repository"

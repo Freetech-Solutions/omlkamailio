@@ -12,4 +12,3 @@ if [ ! -f /usr/sbin/kamctl ]; then
 fi
 chown -R omnileads. /opt/omnileads/kamailio
 echo "Enabling kamailio"
-systemctl enable kamailio
