@@ -9,7 +9,7 @@ if [ $CI_COMMIT_REF_NAME == "master" ]; then
 elif [ $CI_COMMIT_REF_NAME == "develop" ]; then
   docker build -f Dockerfile -t freetechsolutions/omlkam:develop ../..
   docker push freetechsolutions/omlkam:develop
-fi
-
+else
 docker build -f Dockerfile -t freetechsolutions/omlkam:$PACKAGE_VERSION ../..
 docker push freetechsolutions/omlkam:$PACKAGE_VERSION
+fi
