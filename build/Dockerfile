@@ -1,3 +1,3 @@
-FROM kamailio/kamailio:5.3.8-buster as run
+FROM kamailio/kamailio:5.6.0-buster as run
 
 COPY source/* /etc/kamailio/
