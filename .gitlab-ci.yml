@@ -11,7 +11,7 @@ container-image:
   script:
     - >-
       docker buildx build
-      --file=build/Dockerfile
+      --file=Dockerfile
       --tag=run
       --target=run
       .
