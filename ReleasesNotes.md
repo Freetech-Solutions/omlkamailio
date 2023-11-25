@@ -1,12 +1,12 @@
 # Release Notes
-2023-10-01
+2023-11-25
 
 ## Added
+
+* oml-414 [BUILD] In the build stage, it's possible to discern between registry containers based on the branch type.
 
 ## Changed
 
 ## Fixed
-
-* oml-35 Antiflood bans Asterisk when there is a high rate of incoming calls
 
 ## Removed
