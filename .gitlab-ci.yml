@@ -8,22 +8,30 @@ container-image-dev:
   stage: build
   before_script:
     - apk add --no-cache docker-cli-buildx
+    - docker buildx create --use 
   script:
-    - >-
-      docker buildx build
-      --file=Dockerfile
-      --tag=run
-      --target=run
-      .
     - |-
       if [ "${CI_COMMIT_BRANCH}" == "master-2.0" ]; then
         echo "${DOCKER_SECRET}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
-        IMAGE_VERSION="$(date +%Y%m%d)-${CI_COMMIT_SHORT_SHA}"
+      else
+        echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USER}" --password-stdin
+      fi
+
+    - >-
+      docker buildx build
+      --platform linux/amd64
+      --file=Dockerfile
+      --target=run
+      --load
+      -t run
+      .
+
+    - |-
+      IMAGE_VERSION="$(date +%Y%m%d)-${CI_COMMIT_SHORT_SHA}"
+      if [ "${CI_COMMIT_BRANCH}" == "master-2.0" ]; then
         docker tag run omnileads/kamailio:$IMAGE_VERSION
         docker push docker.io/omnileads/kamailio:$IMAGE_VERSION
       else
-        echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USER}" --password-stdin
-        IMAGE_VERSION="$(date +%Y%m%d)-${CI_COMMIT_SHORT_SHA}"
         docker tag run freetechsolutions/kamailio:$IMAGE_VERSION
         docker push docker.io/freetechsolutions/kamailio:$IMAGE_VERSION
       fi  
