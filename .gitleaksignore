@@ -1,0 +1,25 @@
+# Excepciones documentadas - Revisado por DevSecOps
+# Formato: {commit}:{file}:{rule}:{line}
+#
+# source/certs/key.pem y variantes históricas: certificado TLS autofirmado de
+# desarrollo empaquetado en la imagen Docker (COPY source/certs/*). No es una
+# credencial de producción; en despliegue real se sobreescriben vía volumen/secret.
+
+# Hallazgos reportados en pipeline develop-3.0 (gitleaks_scan)
+439bf5ee97c626e3b3f533a4bfcfa865a299c43e:source/certs/key.pem:private-key:1
+1d8d5081027d3e1f5556b9247635b94c747bb2f1:certs/key.pem:private-key:1
+0ebb02fd76a96c95258ff22487f2e35ab4c61700:certs/key.pem:private-key:1
+
+# Historial git - mismas claves dev en distintas rutas
+22e53ba4b33c864803ded23e33524b2aa8e254cf:source/certs/key.pem:private-key:1
+2dc7b55913711dc1385e70b498e4e834570a4a54:source/certs/key.pem:private-key:1
+aff223ee8afd594b590b0d9f69f1342ba5f35dd7:source/certs/key.pem:private-key:1
+035b1ad1827d772bf2058326082110a1572a3fd3:source/certs/key.pem:private-key:1
+93a44a4fd5dbb4f53a42123bc90cc7a171a4da7a:source/certs/key.pem:private-key:1
+9b4d0fb2ec8d8bd75d0942baa9caea1ac20b2ee9:source/certs/key.pem:private-key:1
+fe375ec902eb666fb87be9efef56840056eec74a:deploy/certs/key.pem:private-key:1
+fe375ec902eb666fb87be9efef56840056eec74a:source/conf/certs/key.pem:private-key:1
+439bf5ee97c626e3b3f533a4bfcfa865a299c43e:source/conf/certs/key.pem:private-key:1
+49dabadabeaf1fe290124b5c0949f76705f421d2:source/conf/certs/key.pem:private-key:1
+1d8d5081027d3e1f5556b9247635b94c747bb2f1:ansible/deploy/certs/key.pem:private-key:1
+563fd3d736c79d8fafdd9accc186f48dbbfa74e4:conf/certs/key.pem:private-key:1
