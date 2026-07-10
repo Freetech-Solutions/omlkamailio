@@ -1,0 +1,7 @@
+# CVE-2026-42496: Vulnerabilidad en Archive::Tar (Perl). No explotable.
+# El modulo Archive::Tar no se encuentra instalado en la imagen debian-slim ni es utilizado por Kamailio.
+CVE-2026-42496
+
+# CVE-2026-8376: Heap buffer overflow en Perl regex engine en 32-bits. No explotable.
+# Las imagenes se construyen exclusivamente para plataformas de 64-bits (amd64 y arm64).
+CVE-2026-8376
