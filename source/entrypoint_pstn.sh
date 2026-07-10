@@ -132,7 +132,7 @@ echo "Generated ${ITSP_FILE}"
 # ---------------------------------------------------------------------------
 # Start Kamailio
 # ---------------------------------------------------------------------------
-KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f /etc/kamailio/kamailio_voip.cfg"
+KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f /etc/kamailio/kamailio_pstn.cfg"
 
 if is_true "${HOMER_ENABLE}"; then
   echo "Enabling HOMER HEP capture -> ${HOMER_HOST}:${HOMER_PORT} (capture_id=${HOMER_CAPTURE_ID} node=${HOMER_NODE_NAME:-n/a})"
