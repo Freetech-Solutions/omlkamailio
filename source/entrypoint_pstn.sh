@@ -8,18 +8,14 @@ is_true() {
   esac
 }
 
-DISPATCHER_FILE="/etc/kamailio/dispatcher.list"
-ITSP_FILE="/etc/kamailio/itsp_allowlist.cfg"
-
-ASTERISK_SETID="${ASTERISK_SETID:-10}"
-ASTERISK_PORT="${ASTERISK_PORT:-5060}"
-ASTERISK_NODES="${ACD_NODES:-127.0.0.1:5060}"
-ITSP_NODES="${ITSP_NODES:-}"
+# ---------------------------------------------------------------------------
+# Defaults
+# ---------------------------------------------------------------------------
 SHM_SIZE="${SHM_SIZE:-64}"
 PKG_SIZE="${PKG_SIZE:-8}"
-
-# Capturamos la IP privada del entorno (necesaria para forzar el socket)
-IPADDR_PRIVATE="${IPADDR_PRIVATE:-}"
+ASTERISK_SETID="${ASTERISK_SETID:-10}"
+ASTERISK_PORT="${ASTERISK_PORT:-5070}"
+KAMAILIO_UDP_PORT="${KAMAILIO_UDP_PORT:-5060}"
 
 HOMER_ENABLE="${HOMER_ENABLE:-}"
 HOMER_HOST="${HOMER_HOST:-homer_host}"
@@ -27,7 +23,10 @@ HOMER_PORT="${HOMER_PORT:-9060}"
 HOMER_CAPTURE_ID="${HOMER_CAPTURE_ID:-2002}"
 HOMER_NODE_NAME="${HOMER_NODE_NAME:-}"
 
-# hep_capture_id (modparam siptrace) must be a 32-bit integer, not a string label
+KAMAILIO_CERTS_LOCATION="${KAMAILIO_CERTS_LOCATION:-/etc/kamailio/certs}"
+KAMAILIO_TLS_ENABLE="${KAMAILIO_TLS_ENABLE:-}"
+
+# hep_capture_id (modparam siptrace) must be a 32-bit integer
 case "${HOMER_CAPTURE_ID}" in
   ''|*[!0-9]*)
     echo "WARNING: HOMER_CAPTURE_ID must be numeric (got '${HOMER_CAPTURE_ID}'), using 2002"
@@ -36,94 +35,117 @@ case "${HOMER_CAPTURE_ID}" in
 esac
 
 export HOMER_HOST HOMER_PORT HOMER_CAPTURE_ID HOMER_NODE_NAME
+export KAMAILIO_CERTS_LOCATION
 
-: > "$DISPATCHER_FILE"
-
-OLD_IFS="$IFS"
-IFS=','
-for node in $ASTERISK_NODES; do
-    [ -n "$node" ] || continue
-    node="$(echo "$node" | xargs)"
-
-    case "$node" in
-        *=*)
-            host="${node#*=}"
-            ;;
-        *)
-            host="$node"
-            ;;
-    esac
-
-    case "$host" in
-        sip:*)
-            uri="$host"
-            ;;
-        *';transport='*)
-            uri="sip:${host}"
-            ;;
-        *:*)
-            uri="sip:${host}"
-            ;;
-        *)
-            uri="sip:${host}:${ASTERISK_PORT}"
-            ;;
-    esac
-
-    # MODIFICACIÓN CRÍTICA: Inyectamos el socket origen si tenemos IPADDR_PRIVATE
-    if [ -n "$IPADDR_PRIVATE" ]; then
-        echo "${ASTERISK_SETID} ${uri} 0 0 socket=udp:${IPADDR_PRIVATE}:5060" >> "$DISPATCHER_FILE"
-    else
-        echo "${ASTERISK_SETID} ${uri}" >> "$DISPATCHER_FILE"
-        echo "WARNING: IPADDR_PRIVATE no definida. Kamailio usará la tabla de ruteo del SO."
-    fi
+# ---------------------------------------------------------------------------
+# Validate required environment
+# ---------------------------------------------------------------------------
+for var in IPADDR_PUBLIC IPADDR_PRIVATE FQDN RTPENGINE_SOCKET ACD_NODES ITSP_NODES; do
+  eval "val=\${${var}:-}"
+  if [ -z "${val}" ]; then
+    echo "ERROR: environment variable '${var}' must be set" >&2
+    exit 1
+  fi
 done
-IFS="$OLD_IFS"
 
-echo "Generated ${DISPATCHER_FILE}:"
-cat "$DISPATCHER_FILE"
+# ---------------------------------------------------------------------------
+# Parse a single ACD node entry -> sip:host:port
+# Supports: host, host:port, sip:host:port, label=host:port
+# ---------------------------------------------------------------------------
+parse_acd_node() {
+  local raw="$1"
+  local node="${raw#label=}"
+  node="$(echo "${node}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  [ -n "${node}" ] || return 1
 
-: > "$ITSP_FILE"
+  case "${node}" in
+    sip:*)
+      echo "${node}"
+      ;;
+    *:*)
+      echo "sip:${node}"
+      ;;
+    *)
+      echo "sip:${node}:${ASTERISK_PORT}"
+      ;;
+  esac
+}
 
-echo 'route[IS_FROM_ITSP] {' >> "$ITSP_FILE"
+# ---------------------------------------------------------------------------
+# Generate /etc/kamailio/dispatcher.list from ACD_NODES
+# ---------------------------------------------------------------------------
+DISPATCHER_FILE="/etc/kamailio/dispatcher.list"
+SOCKET_ATTR="socket=udp:${IPADDR_PRIVATE}:${KAMAILIO_UDP_PORT}"
 
-if [ -z "$ITSP_NODES" ]; then
-    echo "WARNING: ITSP_NODES is empty. All inbound ITSP matches will fail."
+: > "${DISPATCHER_FILE}"
+priority=0
+IFS=','
+
+for entry in ${ACD_NODES}; do
+  entry="$(echo "${entry}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  [ -n "${entry}" ] || continue
+
+  dest="$(parse_acd_node "${entry}")" || continue
+  priority=$((priority + 1))
+  echo "${ASTERISK_SETID} ${dest} 2 ${priority} ${SOCKET_ATTR}" >> "${DISPATCHER_FILE}"
+done
+
+unset IFS
+
+if [ ! -s "${DISPATCHER_FILE}" ]; then
+  echo "ERROR: ACD_NODES produced an empty ${DISPATCHER_FILE}" >&2
+  exit 1
 fi
 
-OLD_IFS="$IFS"
-IFS=','
-for node in $ITSP_NODES; do
-    [ -n "$node" ] || continue
-    node="$(echo "$node" | xargs)"
+echo "Generated ${DISPATCHER_FILE}:"
+cat "${DISPATCHER_FILE}"
 
-    case "$node" in
-        *=*)
-            ip="${node#*=}"
-            ;;
-        *)
-            ip="$node"
-            ;;
-    esac
+# ---------------------------------------------------------------------------
+# Generate /etc/kamailio/itsp_allowlist.cfg from ITSP_NODES
+# ---------------------------------------------------------------------------
+ITSP_FILE="/etc/kamailio/itsp_allowlist.cfg"
 
-    # $si es solo IP; quitar prefijo sip: y puerto si ITSP_NODES trae host:port
-    ip="${ip#sip:}"
-    case "$ip" in
-        *:*) ip="${ip%%:*}" ;;
-    esac
+{
+  echo "# Auto-generated from ITSP_NODES — do not edit manually"
+  echo "route[IS_FROM_ITSP] {"
+  if [ -z "$(echo "${ITSP_NODES}" | tr -d '[:space:],')" ]; then
+    echo "    return -1;"
+  else
+  IFS=','
+  for entry in ${ITSP_NODES}; do
+    entry="$(echo "${entry}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -n "${entry}" ] || continue
+    ip="${entry#label=}"
+    ip="${ip%%:*}"
+    ip="$(echo "${ip}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -n "${ip}" ] || continue
+    echo "    if (\$si == \"${ip}\") return 1;"
+  done
+  unset IFS
+  echo "    return -1;"
+  fi
+  echo "}"
+} > "${ITSP_FILE}"
 
-    echo "    if (\$si == \"$ip\") return 1;" >> "$ITSP_FILE"
-done
-IFS="$OLD_IFS"
+echo "Generated ${ITSP_FILE}"
 
-echo '    return -1;' >> "$ITSP_FILE"
-echo '}' >> "$ITSP_FILE"
+# ---------------------------------------------------------------------------
+# Start Kamailio
+# ---------------------------------------------------------------------------
+KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f /etc/kamailio/kamailio_voip.cfg"
 
-echo "Generated ${ITSP_FILE}:"
-cat "$ITSP_FILE"
-
-KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f /etc/kamailio/kamailio_pstn.cfg"
 if is_true "${HOMER_ENABLE}"; then
   echo "Enabling HOMER HEP capture -> ${HOMER_HOST}:${HOMER_PORT} (capture_id=${HOMER_CAPTURE_ID} node=${HOMER_NODE_NAME:-n/a})"
   KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_HOMER"
 fi
-exec kamailio ${KAMAILIO_ARGS}
+
+if is_true "${KAMAILIO_TLS_ENABLE}"; then
+  if [ -f "${KAMAILIO_CERTS_LOCATION}/cert.pem" ] && [ -f "${KAMAILIO_CERTS_LOCATION}/key.pem" ]; then
+    echo "Enabling TLS (certs in ${KAMAILIO_CERTS_LOCATION})"
+    KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_TLS"
+  else
+    echo "WARNING: KAMAILIO_TLS_ENABLE set but certs missing in ${KAMAILIO_CERTS_LOCATION}" >&2
+  fi
+fi
+
+exec kamailio ${KAMAILIO_ARGS} "$@"
