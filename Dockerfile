@@ -96,6 +96,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then DEST_LIB="/usr/lib/x86_64-linux-gnu"; e
 # Configs locales
 COPY source/kamailio_webrtc.cfg /etc/kamailio/
 COPY source/kamailio_pstn.cfg /etc/kamailio/
+COPY source/kamailio_pstn_qa.cfg /etc/kamailio/
 COPY source/entrypoint_pstn.sh /
 COPY source/entrypoint_webrtc.sh /
 COPY source/certs/* /etc/kamailio/certs/

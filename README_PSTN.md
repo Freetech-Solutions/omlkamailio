@@ -96,6 +96,25 @@ Behavior is driven by variables passed into the container at start.
 * `ITSP_NODES` — Comma-separated allowed ITSP source IPs for inbound checks. Same optional `label=` form as above; only the IP is compared to `$si`. If empty, the entrypoint warns and no ITSP source will match the allowlist.
 * `ASTERISK_SETID` — Dispatcher set ID written as the first field of each line in `/etc/kamailio/dispatcher.list`. Default: `10`. **The stock `kamailio_pstn.cfg` selects set `10` for inbound (`ds_select_dst`); keep this default unless you change the routing script to use another set ID.**
 * `ASTERISK_PORT` — Default SIP port for backends when the node does not include an explicit port. Default: `5060`.
+* `KAMAILIO_PSTN_QA` — When `true` / `1` / `yes`, the entrypoint loads `kamailio_pstn_qa.cfg` instead of `kamailio_pstn.cfg`. That QA config injects synthetic SIP error replies on **outbound** INVITEs whose R-URI user-part matches the debug prefixes below (same table as omlqa `kamailio_itsp`). Intended for test-env / local debugging; leave unset in production. In test-env you can set it on the `kamailio-pstn` service; a separate `kamailio-itsp` hop (if present) becomes redundant for those prefixes.
+
+  | Prefijo | Respuesta |
+  |---------|-----------|
+  | `092*` | 404 Not Found |
+  | `093*` | 503 Service Unavailable |
+  | `094*` | 486 Busy Here |
+  | `095*` | 603 Decline |
+  | `096*` | 403 Forbidden |
+  | `097*` | 405 Method Not Allowed |
+  | `098*` | 406 Not Acceptable |
+  | `099*` | 408 Request Timeout |
+  | `081*` | 480 Temporarily Unavailable |
+  | `082*` | 487 Request Terminated |
+  | `083*` | 488 Not Acceptable Here |
+  | `084*` | 500 Internal Server Error |
+  | `085*` | 502 Bad Gateway |
+  | `086*` | 608 Rejected |
+  | otro | relay normal hacia ITSP |
 
 ### Performance tuning
 
@@ -111,7 +130,7 @@ On start, the entrypoint builds:
 1. `/etc/kamailio/dispatcher.list` from `ACD_NODES`, using `ASTERISK_SETID` and `ASTERISK_PORT`.
 2. `/etc/kamailio/itsp_allowlist.cfg` from `ITSP_NODES`, defining `route[IS_FROM_ITSP]` used as a strict source-IP gate for inbound PSTN traffic.
 
-It then execs Kamailio with `kamailio_pstn.cfg`.
+It then execs Kamailio with `kamailio_pstn.cfg` (or `kamailio_pstn_qa.cfg` when `KAMAILIO_PSTN_QA` is enabled).
 
 ### 2. Inbound flow (ITSP → proxy → Asterisk)
 

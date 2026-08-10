@@ -132,7 +132,13 @@ echo "Generated ${ITSP_FILE}"
 # ---------------------------------------------------------------------------
 # Start Kamailio
 # ---------------------------------------------------------------------------
-KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f /etc/kamailio/kamailio_pstn.cfg"
+KAMAILIO_CFG="/etc/kamailio/kamailio_pstn.cfg"
+if is_true "${KAMAILIO_PSTN_QA:-}"; then
+  KAMAILIO_CFG="/etc/kamailio/kamailio_pstn_qa.cfg"
+  echo "KAMAILIO_PSTN_QA enabled: using ${KAMAILIO_CFG} (SIP error prefixes 08X/09X)"
+fi
+
+KAMAILIO_ARGS="-DD -E -m ${SHM_SIZE} -M ${PKG_SIZE} -f ${KAMAILIO_CFG}"
 
 if is_true "${HOMER_ENABLE}"; then
   echo "Enabling HOMER HEP capture -> ${HOMER_HOST}:${HOMER_PORT} (capture_id=${HOMER_CAPTURE_ID} node=${HOMER_NODE_NAME:-n/a})"
