@@ -114,6 +114,7 @@ Behavior is driven by variables passed into the container at start.
   | `084*` | 500 Internal Server Error |
   | `085*` | 502 Bad Gateway |
   | `086*` | 608 Rejected |
+  | `087*` | 180 Ringing 45s, luego 408 Request Timeout |
   | otro | relay normal hacia ITSP |
 
 ### Performance tuning
