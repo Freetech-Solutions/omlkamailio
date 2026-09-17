@@ -25,6 +25,8 @@ HOMER_NODE_NAME="${HOMER_NODE_NAME:-}"
 
 KAMAILIO_CERTS_LOCATION="${KAMAILIO_CERTS_LOCATION:-/etc/kamailio/certs}"
 KAMAILIO_TLS_ENABLE="${KAMAILIO_TLS_ENABLE:-}"
+# PIKE antiflood (Fail2Ban jail kamailio-pstn). Default on.
+PIKE_ENABLE="${PIKE_ENABLE:-true}"
 
 # hep_capture_id (modparam siptrace) must be a 32-bit integer
 case "${HOMER_CAPTURE_ID}" in
@@ -152,6 +154,11 @@ if is_true "${KAMAILIO_TLS_ENABLE}"; then
   else
     echo "WARNING: KAMAILIO_TLS_ENABLE set but certs missing in ${KAMAILIO_CERTS_LOCATION}" >&2
   fi
+fi
+
+if is_true "${PIKE_ENABLE}"; then
+  echo "Enabling PIKE antiflood (WITH_ANTIFLOOD)"
+  KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_ANTIFLOOD"
 fi
 
 exec kamailio ${KAMAILIO_ARGS} "$@"
