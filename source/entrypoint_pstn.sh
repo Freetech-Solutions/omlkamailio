@@ -27,6 +27,8 @@ KAMAILIO_CERTS_LOCATION="${KAMAILIO_CERTS_LOCATION:-/etc/kamailio/certs}"
 KAMAILIO_TLS_ENABLE="${KAMAILIO_TLS_ENABLE:-}"
 # PIKE antiflood (Fail2Ban jail kamailio-pstn). Default on.
 PIKE_ENABLE="${PIKE_ENABLE:-true}"
+# Optional explicit NAT override (when host has 1 NIC with IPADDR_PRIVATE and DGW NATs to IPADDR_PUBLIC)
+NAT_ENABLE="${NAT_ENABLE:-}"
 
 # hep_capture_id (modparam siptrace) must be a 32-bit integer
 case "${HOMER_CAPTURE_ID}" in
@@ -159,6 +161,33 @@ fi
 if is_true "${PIKE_ENABLE}"; then
   echo "Enabling PIKE antiflood (WITH_ANTIFLOOD)"
   KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_ANTIFLOOD"
+fi
+
+# Detect Single-NIC / NAT mode:
+# 1) Explicit NAT_ENABLE=true, or
+# 2) IPADDR_PUBLIC == IPADDR_PRIVATE, or
+# 3) IPADDR_PUBLIC is not assigned to any local network interface (/proc/net/fib_trie)
+is_local_ipv4() {
+  local target_ip="$1"
+  if [ -r /proc/net/fib_trie ]; then
+    awk '/32 host LOCAL/ { if (prev == ip) { found=1; exit } } { prev=$2 } END { exit !found }' ip="${target_ip}" /proc/net/fib_trie
+    return $?
+  elif command -v ip >/dev/null 2>&1; then
+    ip -4 addr show | grep -qF "inet ${target_ip}/"
+    return $?
+  fi
+  return 0
+}
+
+if is_true "${NAT_ENABLE}"; then
+  echo "Single-NIC NAT mode enabled via NAT_ENABLE=true (bind=${IPADDR_PRIVATE}, advertise=${IPADDR_PUBLIC})"
+  KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_SINGLE_NIC_NAT"
+elif [ "${IPADDR_PUBLIC}" = "${IPADDR_PRIVATE}" ]; then
+  echo "Single-NIC mode: IPADDR_PUBLIC == IPADDR_PRIVATE (${IPADDR_PRIVATE})"
+  KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_SINGLE_NIC_NAT"
+elif ! is_local_ipv4 "${IPADDR_PUBLIC}"; then
+  echo "Single-NIC NAT mode auto-detected: IPADDR_PUBLIC (${IPADDR_PUBLIC}) is not a local IP; binding on ${IPADDR_PRIVATE} and advertising ${IPADDR_PUBLIC}"
+  KAMAILIO_ARGS="${KAMAILIO_ARGS} -A WITH_SINGLE_NIC_NAT"
 fi
 
 exec kamailio ${KAMAILIO_ARGS} "$@"

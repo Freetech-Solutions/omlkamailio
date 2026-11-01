@@ -10,6 +10,7 @@ is_true() {
 
 SHM_SIZE="${SHM_SIZE:-128}"
 PKG_SIZE="${PKG_SIZE:-16}"
+WEBRTC_RTP_IFACE="${WEBRTC_RTP_IFACE:-external}"
 
 HOMER_ENABLE="${HOMER_ENABLE:-}"
 HOMER_HOST="${HOMER_HOST:-homer_host}"
@@ -26,6 +27,7 @@ case "${HOMER_CAPTURE_ID}" in
 esac
 
 export HOMER_HOST HOMER_PORT HOMER_CAPTURE_ID HOMER_NODE_NAME
+export WEBRTC_RTP_IFACE
 
 # ---------------------------------------------------------------------------
 # Generate /etc/kamailio/acd_allowlist.cfg from ACD_NET_ADDR
