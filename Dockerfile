@@ -3,7 +3,7 @@ FROM debian:trixie-slim AS build
 
 ARG TARGETARCH
 
-ENV KAM_VERSION=6.0.5
+ENV KAM_VERSION=6.1.4
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------------------------
